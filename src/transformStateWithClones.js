@@ -18,46 +18,48 @@ const transformStateWithClones = (state, actions) => {
 
   const KEYS_TO_REMOVE_NOT_DEFINED = 'Keys To Remove is not defined';
 
-  const initState = { ...state };
-
   const stateHistory = [];
 
+  let previousState = state;
+
   for (const action of actions) {
-    if (typeof action.type === 'undefined') {
-      continue;
-    }
+    // preserve state and use copy of it for each iteration
+    let stateCopy = Object.assign({}, previousState);
 
-    switch (action.type) {
-      case ACTION_ADD_PROPERTIES:
-        if (typeof action.extraData === 'undefined') {
-          throw new Error(MESSAGE_EXTRA_DATA_NOT_DEFINED);
-        }
-
-        Object.assign(initState, action.extraData);
-        break;
-      case ACTION_REMOVE_PROPERTIES:
-        if (typeof action.keysToRemove === 'undefined') {
-          throw new Error(KEYS_TO_REMOVE_NOT_DEFINED);
-        }
-
-        for (const key in initState) {
-          if (action.keysToRemove.includes(key)) {
-            delete initState[key];
+    if (typeof action.type !== 'undefined') {
+      switch (action.type) {
+        case ACTION_ADD_PROPERTIES:
+          if (typeof action.extraData === 'undefined') {
+            throw new Error(MESSAGE_EXTRA_DATA_NOT_DEFINED);
           }
-        }
-        break;
-      case ACTION_CLEAR:
-        for (const property in initState) {
-          if (Object.hasOwn(initState, property)) {
-            delete initState[property];
+
+          Object.assign(stateCopy, action.extraData);
+          break;
+        case ACTION_REMOVE_PROPERTIES:
+          if (typeof action.keysToRemove === 'undefined') {
+            throw new Error(KEYS_TO_REMOVE_NOT_DEFINED);
           }
-        }
-        break;
-      default:
-        throw new Error(MESSAGE_ACTION_INVALID);
+
+          for (const key in stateCopy) {
+            if (action.keysToRemove.includes(key)) {
+              delete stateCopy[key];
+            }
+          }
+          break;
+        case ACTION_CLEAR:
+          for (const property in stateCopy) {
+            if (Object.hasOwn(stateCopy, property)) {
+              delete stateCopy[property];
+            }
+          }
+          break;
+        default:
+          throw new Error(MESSAGE_ACTION_INVALID);
+      }
+      stateHistory.push({ ...stateCopy });
+      stateCopy = Object.assign({}, stateCopy);
+      previousState = stateCopy;
     }
-    // add cloned copy to stack
-    stateHistory.push({ ...initState });
   }
 
   return stateHistory;
