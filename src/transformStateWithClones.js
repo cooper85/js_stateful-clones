@@ -14,10 +14,6 @@ const transformStateWithClones = (state, actions) => {
 
   const MESSAGE_ACTION_INVALID = 'Action invalid';
 
-  const MESSAGE_EXTRA_DATA_NOT_DEFINED = 'Extra Data is not defied';
-
-  const KEYS_TO_REMOVE_NOT_DEFINED = 'Keys To Remove is not defined';
-
   const stateHistory = [];
 
   let previousState = state;
@@ -29,19 +25,14 @@ const transformStateWithClones = (state, actions) => {
     if (typeof action.type !== 'undefined') {
       switch (action.type) {
         case ACTION_ADD_PROPERTIES:
-          if (typeof action.extraData === 'undefined') {
-            throw new Error(MESSAGE_EXTRA_DATA_NOT_DEFINED);
+          if (action.extraData) {
+            Object.assign(stateCopy, action.extraData);
           }
-
-          Object.assign(stateCopy, action.extraData);
           break;
         case ACTION_REMOVE_PROPERTIES:
-          if (typeof action.keysToRemove === 'undefined') {
-            throw new Error(KEYS_TO_REMOVE_NOT_DEFINED);
-          }
-
-          for (const key in stateCopy) {
-            if (action.keysToRemove.includes(key)) {
+          if (action.keysToRemove) {
+            for (const key of action.keysToRemove) {
+              // no errors on missed keys
               delete stateCopy[key];
             }
           }
